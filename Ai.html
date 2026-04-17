@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joke Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: lavender;
+        }
+        h1 {
+            text-align: center;
+            color: purple;
+        }
+        .joke-card {
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 1rem 0;
+        }
+        .setup {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        .punchline {
+            font-size: 17px;
+            color: #555;
+            display: none;
+        }
+        .category-btn {
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .category-btn.active {
+            background: #dce8f7;
+            color: #185fa5;
+            border-color: #185fa5;
+        }
+        .rating-btn {
+            background: none;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .rating-btn:hover {
+            background: #f0f0f0;
+        }
+        button {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Joke Generator</h1>
+    <p style="text-align: center; color: #555;">Pick a category and get laughing!</p>
+
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem;">
+        <button class="category-btn active" onclick="setCategory('dad', this)">Dad jokes</button>
+        <button class="category-btn" onclick="setCategory('animal', this)">Animal jokes</button>
+        <button class="category-btn" onclick="setCategory('food', this)">Food jokes</button>
+        <button class="category-btn" onclick="setCategory('school', this)">School jokes</button>
+    </div>
+
+    <div class="joke-card" id="joke-card">
+        <p class="setup" id="setup"></p>
+        <p class="punchline" id="punchline"></p>
+        <button id="reveal-btn" onclick="revealPunchline()" style="margin-top: 1rem; display: none;">Reveal punchline</button>
+    </div>
+
+    <div id="rating-section" style="display: none; gap: 8px; justify-content: center; margin-top: 1rem; flex-wrap: wrap; text-align: center;">
+        <span style="font-size: 13px; color: #555; align-self: center;">Rate it:</span>
+        <button class="rating-btn" onclick="rate('Groaned')">Groaned</button>
+        <button class="rating-btn" onclick="rate('Chuckled')">Chuckled</button>
+        <button class="rating-btn" onclick="rate('Laughed out loud')">Laughed out loud</button>
+    </div>
+
+    <div style="text-align: center; margin-top: 1rem;">
+        <button onclick="nextJoke()" style="padding: 10px 28px; font-size: 15px;">Next joke</button>
+        <p id="counter" style="font-size: 13px; color: #888; margin-top: 0.5rem;"></p>
+    </div>
+
+    <script>
+        const jokes = {
+            dad: [
+                { setup: "Why don't scientists trust atoms?", punchline: "Because they make up everything!" },
+                { setup: "I'm reading a book about anti-gravity.", punchline: "It's impossible to put down." },
+                { setup: "Did you hear about the mathematician who's afraid of negative numbers?", punchline: "He'll stop at nothing to avoid them." },
+                { setup: "Why did the scarecrow win an award?", punchline: "Because he was outstanding in his field." },
+                { setup: "I used to hate facial hair...", punchline: "But then it grew on me." },
+                { setup: "What do you call cheese that isn't yours?", punchline: "Nacho cheese!" },
+            ],
+            animal: [
+                { setup: "What do you call a sleeping dinosaur?", punchline: "A dino-snore!" },
+                { setup: "Why don't elephants use computers?", punchline: "Because they're afraid of the mouse!" },
+                { setup: "What do you call a fish without eyes?", punchline: "A fsh." },
+                { setup: "Why did the cat sit on the computer?", punchline: "To keep an eye on the mouse!" },
+                { setup: "What do you call a lazy kangaroo?", punchline: "A pouch potato." },
+                { setup: "How do you make an octopus laugh?", punchline: "With ten-tickles!" },
+            ],
+            food: [
+                { setup: "Why did the tomato turn red?", punchline: "Because it saw the salad dressing!" },
+                { setup: "What do you call a fake noodle?", punchline: "An impasta!" },
+                { setup: "Why did the banana go to the doctor?", punchline: "Because it wasn't peeling well." },
+                { setup: "Why did the cookie go to the doctor?", punchline: "Because it was feeling crummy." },
+                { setup: "What do elves make sandwiches with?", punchline: "Shortbread!" },
+            ],
+            school: [
+                { setup: "Why did the student eat his homework?", punchline: "Because the teacher told him it was a piece of cake!" },
+                { setup: "Why was the math book sad?", punchline: "Because it had too many problems." },
+                { setup: "Why did the teacher wear sunglasses?", punchline: "Because her students were so bright!" },
+                { setup: "What's a snake's favorite subject?", punchline: "Hiss-tory!" },
+            ]
+        };
+
+        let category = 'dad';
+        let index = 0;
+        let groans = 0, chuckles = 0, laughs = 0;
+
+        function setCategory(cat, btn) {
+            category = cat;
+            index = 0;
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            showJoke();
+        }
+
+        function showJoke() {
+            const joke = jokes[category][index % jokes[category].length];
+            document.getElementById('setup').textContent = joke.setup;
+            document.getElementById('punchline').textContent = joke.punchline;
+            document.getElementById('punchline').style.display = 'none';
+            document.getElementById('reveal-btn').style.display = 'inline-block';
+            document.getElementById('rating-section').style.display = 'none';
+        }
+
+        function revealPunchline() {
+            document.getElementById('punchline').style.display = 'block';
+            document.getElementById('reveal-btn').style.display = 'none';
+            document.getElementById('rating-section').style.display = 'flex';
+        }
+
+        function nextJoke() {
+            index++;
+            showJoke();
+        }
+
+        function rate(reaction) {
+            if (reaction === 'Groaned') groans++;
+            else if (reaction === 'Chuckled') chuckles++;
+            else laughs++;
+            document.getElementById('rating-section').style.display = 'none';
+            const total = groans + chuckles + laughs;
+            document.getElementById('counter').textContent = total + ' rated — Groaned: ' + groans + ' | Chuckled: ' + chuckles + ' | Laughed: ' + laughs;
+        }
+
+        showJoke();
+    </script>
+
+</body>
+</html>
